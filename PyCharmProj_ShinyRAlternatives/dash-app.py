@@ -47,9 +47,14 @@ controls = dbc.Card(
             [
                 dbc.Label("Energy type:"),
                 dcc.Dropdown(
-                    ['Gas', 'Electricity'],
-                    "Gas",
-                    id="energy_type"
+                    id="energy_type",
+                    options=[
+                        {"label": "Gas", "value": "Gas"},
+                        {"label": "Electricity", "value": "Electricity"}
+                    ],
+                    multi=False,
+                    value="Gas",
+                    style={'width': "50%"}
                 ),
             ]
         ),
@@ -84,17 +89,18 @@ app.layout = dbc.Container(
 
 
 @app.callback(
-    Output("ts-graph", "figure"),
+    Output("ts-graph", component_property="figure"),
     [
-        Input("energy_type", "value"),
-        Input("region_name", "value")
+        Input("energy_type", component_property="value"),
+        Input("region_name", component_property="value")
     ],
 )
 def make_graph(energy_type, region_name):
     print(energy_type)
     print(region_name)
 
-    dt_chunk = dt.loc[(dt["Attribute 1"] == region_name) & (dt["Attribute 2"].isin(PERIODS)), ]
+    dt_chunk = dt.copy()
+    dt_chunk = dt_chunk.loc[(dt_chunk["Attribute 1"] == region_name) & (dt_chunk["Attribute 2"].isin(PERIODS)), ]
 
     if energy_type == "Gas":
         dt_chunk = dt_chunk[["Attribute 1", "Attribute 2"] + GAS_DIMS]
@@ -105,8 +111,6 @@ def make_graph(energy_type, region_name):
     dt_chunk.variable = dt_chunk.variable.str.replace("Gas Median |Elec Median ", "", regex=True)
     dt_chunk.value = pd.to_numeric(dt_chunk.value)
     dt_chunk.variable = pd.to_numeric(dt_chunk.variable)
-
-    # st.write(dt_chunk)
 
     dt_chunk["ds"] = [str(year) + "-01-01" for year in dt_chunk.variable]
     dt_chunk = dt_chunk.rename(columns={"value": "y"})
