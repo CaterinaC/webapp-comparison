@@ -57,7 +57,7 @@ region_name = st.sidebar.selectbox(
 )
 
 
-dt_chunk = dt.loc[(dt["Attribute 1"] == region_name) & (dt["Attribute 2"].isin(PERIODS)),]
+dt_chunk = dt.loc[(dt["Attribute 1"] == region_name) & (dt["Attribute 2"].isin(PERIODS)), ]
 
 if energy_type == "Gas":
     dt_chunk = dt_chunk[["Attribute 1", "Attribute 2"] + GAS_DIMS]
