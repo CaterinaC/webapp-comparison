@@ -4,13 +4,12 @@ import pandas as pd
 from pathlib import Path
 import plotly.express as px
 from prophet import Prophet
-from dash import Input, Output, dcc, html
+from dash import Input, Output, dcc, html, Dash, dash_table
 
 
 dt = pd.read_csv(Path(__file__).parent / "NEED_data_explorer_2021.csv",
                   encoding="latin-1",
                   na_values="n/a")
-
 
 
 REGIONS = ["North East",
@@ -38,7 +37,6 @@ GAS_DIMS = dt.filter(regex="Gas Median").columns.values.tolist()
 ELEC_DIMS = dt.filter(regex="Elec Median").columns.values.tolist()
 
 
-
 app = dash.Dash(external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 controls = dbc.Card(
@@ -54,7 +52,7 @@ controls = dbc.Card(
                     ],
                     multi=False,
                     value="Gas",
-                    style={'width': "50%"}
+                    style={'width': "100%"}
                 ),
             ]
         ),
@@ -78,8 +76,9 @@ app.layout = dbc.Container(
         html.Hr(),
         dbc.Row(
             [
-                dbc.Col(controls, md=4),
-                dbc.Col(dcc.Graph(id="ts-graph"), md=8),
+                dbc.Col(controls, md=2),
+                dbc.Col(dcc.Graph(id="ts-graph"), md=6),
+                dbc.Col(html.Div(id="ts-table"), md=4)
             ],
             align="center",
         ),
@@ -89,11 +88,10 @@ app.layout = dbc.Container(
 
 
 @app.callback(
-    Output("ts-graph", component_property="figure"),
-    [
+        Output("ts-graph", component_property="figure"),
+        Output("ts-table", component_property="children"),
         Input("energy_type", component_property="value"),
         Input("region_name", component_property="value")
-    ],
 )
 def make_graph(energy_type, region_name):
     print(energy_type)
@@ -166,7 +164,10 @@ def make_graph(energy_type, region_name):
                   )
     fig.update_traces(line=dict(width=4))
 
-    return fig
+    tabular_otpt = dash_table.DataTable(data=output.to_dict('records'),
+                                        columns=[{"name": i, "id": i} for i in output.columns],
+                                        page_size=10)
+    return fig, tabular_otpt
 
 
 if __name__ == "__main__":
